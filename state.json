@@ -1,13 +1,19 @@
 {
   "phase": "monitoring",
-  "last_check_date": "",
-  "last_price": 0,
-  "signals": {},
+  "last_check_date": "2026-06-26",
+  "last_price": 2.954,
+  "signals": {
+    "volume_shrink": false,
+    "macd_turning": false,
+    "price_stabilize": false,
+    "dividend_yield_high": false,
+    "price_in_zone": false
+  },
   "signals_met_count": 0,
   "early_warning_sent": false,
   "early_warning_date": "",
   "buy_emails_sent": 0,
   "buy_signal_date": "",
   "buy_signal_confirmed": false,
-  "notes": ""
+  "notes": "最近检查: 2026-06-26, 价格: 2.954, 信号: 0/5"
 }
