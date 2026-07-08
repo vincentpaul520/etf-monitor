@@ -1,19 +1,19 @@
 {
   "phase": "monitoring",
-  "last_check_date": "2026-07-07",
-  "last_price": 3.044,
+  "last_check_date": "2026-07-08",
+  "last_price": 3.08,
   "signals": {
     "volume_shrink": false,
     "macd_turning": false,
     "price_stabilize": true,
     "dividend_yield_high": false,
-    "price_in_zone": true
+    "price_in_zone": false
   },
-  "signals_met_count": 2,
+  "signals_met_count": 1,
   "early_warning_sent": true,
   "early_warning_date": "2026-06-30",
   "buy_emails_sent": 1,
   "buy_signal_date": "2026-07-03",
   "buy_signal_confirmed": false,
-  "notes": "最近检查: 2026-07-07, 价格: 3.044, 信号: 2/5"
+  "notes": "最近检查: 2026-07-08, 价格: 3.080, 信号: 1/5"
 }
