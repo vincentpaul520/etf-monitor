@@ -1,7 +1,7 @@
 {
   "phase": "monitoring",
-  "last_check_date": "2026-08-04",
-  "last_price": 3.237,
+  "last_check_date": "2026-08-05",
+  "last_price": 3.228,
   "signals": {
     "volume_shrink": false,
     "macd_turning": false,
@@ -15,5 +15,5 @@
   "buy_emails_sent": 1,
   "buy_signal_date": "2026-07-03",
   "buy_signal_confirmed": false,
-  "notes": "最近检查: 2026-08-04, 价格: 3.237, 信号: 0/5"
+  "notes": "最近检查: 2026-08-05, 价格: 3.228, 信号: 0/5"
 }
