@@ -1,0 +1,77 @@
+name: smtp-probe
+
+on:
+  push:
+    branches:
+      - cursor/fix-gha-smtp-c42b
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Probe QQ SMTP without sending mail
+        run: |
+          python - << 'PY'
+          import socket, ssl, smtplib, traceback
+          print("python", __import__("sys").version)
+          print("openssl", ssl.OPENSSL_VERSION)
+          print("hostname", socket.gethostname())
+          print("fqdn", socket.getfqdn())
+          try:
+              print("local_ip", socket.gethostbyname(socket.gethostname()))
+          except Exception as e:
+              print("local_ip_err", type(e).__name__, e)
+          print("--- getaddrinfo ---")
+          infos = socket.getaddrinfo("smtp.qq.com", 465, type=socket.SOCK_STREAM)
+          for info in infos:
+              print(info[0], info[4])
+
+          def banner(family, label, tls_max):
+              print(f"--- {label} tls_max={tls_max} ---")
+              try:
+                  addrs = socket.getaddrinfo("smtp.qq.com", 465, family, socket.SOCK_STREAM)
+              except Exception as e:
+                  print("resolve", type(e).__name__, e)
+                  return
+              if not addrs:
+                  print("no addr")
+                  return
+              addr = addrs[0][4]
+              print("addr", addr)
+              raw = socket.socket(addrs[0][0], socket.SOCK_STREAM)
+              raw.settimeout(12)
+              try:
+                  raw.connect(addr)
+                  print("tcp ok")
+                  ctx = ssl.create_default_context()
+                  if tls_max == "1.2":
+                      ctx.maximum_version = ssl.TLSVersion.TLSv1_2
+                  ssock = ctx.wrap_socket(raw, server_hostname="smtp.qq.com")
+                  print("tls", ssock.version(), ssock.cipher()[0] if ssock.cipher() else None)
+                  data = ssock.recv(200)
+                  print("banner", data)
+                  ssock.close()
+              except Exception as e:
+                  print(type(e).__name__, e)
+
+          banner(socket.AF_INET, "ipv4", "default")
+          banner(socket.AF_INET6, "ipv6", "default")
+          banner(socket.AF_INET, "ipv4", "1.2")
+          banner(socket.AF_INET6, "ipv6", "1.2")
+
+          print("--- smtplib default connect+ehlo, no auth ---")
+          try:
+              s = smtplib.SMTP_SSL("smtp.qq.com", 465, timeout=20)
+              print("connected local_hostname", s.local_hostname, "sock", s.sock)
+              code, msg = s.ehlo()
+              print("ehlo", code, msg[:120])
+              s.quit()
+          except Exception as e:
+              print(type(e).__name__, e)
+              traceback.print_exc()
+          PY
