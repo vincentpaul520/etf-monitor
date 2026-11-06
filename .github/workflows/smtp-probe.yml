@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: One real AUTH PLAIN attempt, no mail
+      - name: Check stripped address then one login, no mail
         env:
           QQ_EMAIL: ${{ secrets.QQ_EMAIL }}
           QQ_SMTP_CODE: ${{ secrets.QQ_SMTP_CODE }}
@@ -23,22 +23,28 @@ jobs:
           import os, smtplib, string
           email = os.environ.get("QQ_EMAIL", "")
           code = os.environ.get("QQ_SMTP_CODE", "")
-          allowed = set(string.ascii_letters + string.digits)
-          print("email_len", len(email), "code_len", len(code))
-          print("email_strip_same", email == email.strip(), "code_strip_same", code == code.strip())
-          print("email_alnum_at", set(email) <= allowed | set("@."))
-          print("code_alnum", set(code) <= allowed)
-          print("email_at", email.count("@"), "email_suffix_ok", email.endswith("@qq.com") or email.endswith("@foxmail.com"))
+          allowed = set(string.ascii_letters + string.digits + "@.")
+          odd = [(i, hex(ord(c))) for i, c in enumerate(email) if c not in allowed]
+          print("odd_email_chars", odd)
+          cleaned = email.strip()
+          code_clean = code.strip()
+          print("stripped_len", len(cleaned), "code_len", len(code_clean))
+          print("suffix_ok", cleaned.endswith("@qq.com") or cleaned.endswith("@foxmail.com"))
+          print("charset_ok", set(cleaned) <= allowed and set(code_clean) <= set(string.ascii_letters + string.digits))
+          if not (cleaned.endswith("@qq.com") or cleaned.endswith("@foxmail.com")):
+              print("skip_login")
+              raise SystemExit(0)
           s = smtplib.SMTP_SSL("smtp.qq.com", 465, timeout=20, local_hostname="localhost")
           s.ehlo("localhost")
-          s.user, s.password = email, code
           try:
-              resp = s.auth("PLAIN", s.auth_plain, initial_response_ok=True)
-              print("AUTH PLAIN", resp[0], resp[1])
-          except Exception as e:
-              print(type(e).__name__, e)
-          try:
+              s.login(cleaned, code_clean)
+              print("login_ok")
+              s.rset()
               s.quit()
           except Exception as e:
-              print("quit", type(e).__name__, e)
+              print(type(e).__name__, e)
+              try:
+                  s.close()
+              except Exception:
+                  pass
           PY
