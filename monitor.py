@@ -516,15 +516,26 @@ def save_state(state):
 
 
 # ========== 邮件发送 ==========
+def smtp_account():
+    """Return the QQ account after removing secret whitespace.
+
+    GitHub Actions stores QQ_EMAIL with a trailing newline. QQ rejects that
+    username, closes the socket, and smtplib.login() reports it as
+    "Connection unexpectedly closed" instead of an authentication error.
+    """
+    return (QQ_EMAIL or "").strip(), (QQ_SMTP_CODE or "").strip()
+
+
 def send_email(subject, body):
-    if not QQ_EMAIL or not QQ_SMTP_CODE:
+    user, password = smtp_account()
+    if not user or not password:
         print(f"[WARN] 邮箱未配置，跳过发送: {subject}")
         print(f"[EMAIL BODY]\n{body}")
         return False
 
     msg = MIMEMultipart("alternative")
-    msg["From"] = QQ_EMAIL
-    msg["To"] = QQ_EMAIL
+    msg["From"] = user
+    msg["To"] = user
     msg["Subject"] = subject
 
     safe = html.escape(body)
@@ -534,8 +545,8 @@ def send_email(subject, body):
 
     try:
         with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=30) as server:
-            server.login(QQ_EMAIL, QQ_SMTP_CODE)
-            server.sendmail(QQ_EMAIL, QQ_EMAIL, msg.as_string())
+            server.login(user, password)
+            server.sendmail(user, user, msg.as_string())
         print(f"[OK] 邮件已发送: {subject}")
         return True
     except Exception as e:
