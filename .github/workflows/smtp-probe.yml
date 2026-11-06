@@ -14,140 +14,31 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Probe QQ SMTP without sending mail
+      - name: One real AUTH PLAIN attempt, no mail
         env:
           QQ_EMAIL: ${{ secrets.QQ_EMAIL }}
           QQ_SMTP_CODE: ${{ secrets.QQ_SMTP_CODE }}
         run: |
           python - << 'PY'
-          import socket, ssl, smtplib, traceback
-          print("python", __import__("sys").version)
-          print("openssl", ssl.OPENSSL_VERSION)
-          print("hostname", socket.gethostname())
-          print("fqdn", socket.getfqdn())
-          try:
-              print("local_ip", socket.gethostbyname(socket.gethostname()))
-          except Exception as e:
-              print("local_ip_err", type(e).__name__, e)
-          print("--- getaddrinfo ---")
-          infos = socket.getaddrinfo("smtp.qq.com", 465, type=socket.SOCK_STREAM)
-          for info in infos:
-              print(info[0], info[4])
-
-          def banner(family, label, tls_max):
-              print(f"--- {label} tls_max={tls_max} ---")
-              try:
-                  addrs = socket.getaddrinfo("smtp.qq.com", 465, family, socket.SOCK_STREAM)
-              except Exception as e:
-                  print("resolve", type(e).__name__, e)
-                  return
-              if not addrs:
-                  print("no addr")
-                  return
-              addr = addrs[0][4]
-              print("addr", addr)
-              raw = socket.socket(addrs[0][0], socket.SOCK_STREAM)
-              raw.settimeout(12)
-              try:
-                  raw.connect(addr)
-                  print("tcp ok")
-                  ctx = ssl.create_default_context()
-                  if tls_max == "1.2":
-                      ctx.maximum_version = ssl.TLSVersion.TLSv1_2
-                  ssock = ctx.wrap_socket(raw, server_hostname="smtp.qq.com")
-                  print("tls", ssock.version(), ssock.cipher()[0] if ssock.cipher() else None)
-                  data = ssock.recv(200)
-                  print("banner", data)
-                  ssock.close()
-              except Exception as e:
-                  print(type(e).__name__, e)
-
-          banner(socket.AF_INET, "ipv4", "default")
-          banner(socket.AF_INET6, "ipv6", "default")
-          banner(socket.AF_INET, "ipv4", "1.2")
-          banner(socket.AF_INET6, "ipv6", "1.2")
-
-          print("--- smtplib default connect+ehlo, no auth ---")
-          try:
-              s = smtplib.SMTP_SSL("smtp.qq.com", 465, timeout=20)
-              print("connected local_hostname", s.local_hostname, "sock", s.sock)
-              code, msg = s.ehlo()
-              print("ehlo", code, msg)
-              try:
-                  s.quit()
-              except Exception as e:
-                  print("quit_after_ehlo", type(e).__name__, e)
-          except Exception as e:
-              print(type(e).__name__, e)
-              traceback.print_exc()
-
-          import base64, os
-
-          def b64(raw):
-              return base64.b64encode(raw).decode()
-
-          def fresh():
-              s = smtplib.SMTP_SSL("smtp.qq.com", 465, timeout=20, local_hostname="localhost")
-              s.ehlo("localhost")
-              return s
-
-          print("--- fake AUTH PLAIN ---")
-          try:
-              s = fresh()
-              code, resp = s.docmd("AUTH", "PLAIN " + b64(b"\0not-a-real-user@qq.com\0not-a-real-auth-code"))
-              print("plain", code, resp)
-              s.close()
-          except Exception as e:
-              print(type(e).__name__, e)
-
-          print("--- fake AUTH LOGIN ---")
-          try:
-              s = fresh()
-              code, resp = s.docmd("AUTH", "LOGIN")
-              print("login1", code, resp)
-              if code == 334:
-                  code, resp = s.docmd(b64(b"not-a-real-user@qq.com"))
-                  print("login2", code, resp)
-              if code == 334:
-                  code, resp = s.docmd(b64(b"not-a-real-auth-code"))
-                  print("login3", code, resp)
-              s.close()
-          except Exception as e:
-              print(type(e).__name__, e)
-
-          print("--- fake login() ---")
-          try:
-              s = fresh()
-              s.login("not-a-real-user@qq.com", "not-a-real-auth-code")
-              print("fake login unexpectedly ok")
-              s.close()
-          except Exception as e:
-              print(type(e).__name__, e)
-
+          import os, smtplib, string
           email = os.environ.get("QQ_EMAIL", "")
-          code_secret = os.environ.get("QQ_SMTP_CODE", "")
-          print("--- real login then RSET, no DATA ---")
-          print("secret_present", bool(email), bool(code_secret), "email_len", len(email), "code_len", len(code_secret))
-          if email and code_secret:
-              try:
-                  s = smtplib.SMTP_SSL("smtp.qq.com", 465, timeout=20, local_hostname="localhost")
-                  s.ehlo("localhost")
-                  # Prefer LOGIN, the method QQ documents. Do not print credentials.
-                  s.user, s.password = email, code_secret
-                  code, resp = s.auth("LOGIN", s.auth_login, initial_response_ok=False)
-                  print("real AUTH LOGIN", code, resp)
-                  if code == 235:
-                      mail_code, mail_resp = s.mail(email)
-                      print("MAIL FROM", mail_code, mail_resp)
-                      rcpt_code, rcpt_resp = s.rcpt(email)
-                      print("RCPT TO", rcpt_code, rcpt_resp)
-                      rset_code, rset_resp = s.rset()
-                      print("RSET", rset_code, rset_resp)
-                  try:
-                      s.quit()
-                  except Exception as e:
-                      print("quit", type(e).__name__, e)
-              except Exception as e:
-                  print("real_login", type(e).__name__, e)
-                  traceback.print_exc()
+          code = os.environ.get("QQ_SMTP_CODE", "")
+          allowed = set(string.ascii_letters + string.digits)
+          print("email_len", len(email), "code_len", len(code))
+          print("email_strip_same", email == email.strip(), "code_strip_same", code == code.strip())
+          print("email_alnum_at", set(email) <= allowed | set("@."))
+          print("code_alnum", set(code) <= allowed)
+          print("email_at", email.count("@"), "email_suffix_ok", email.endswith("@qq.com") or email.endswith("@foxmail.com"))
+          s = smtplib.SMTP_SSL("smtp.qq.com", 465, timeout=20, local_hostname="localhost")
+          s.ehlo("localhost")
+          s.user, s.password = email, code
+          try:
+              resp = s.auth("PLAIN", s.auth_plain, initial_response_ok=True)
+              print("AUTH PLAIN", resp[0], resp[1])
+          except Exception as e:
+              print(type(e).__name__, e)
+          try:
+              s.quit()
+          except Exception as e:
+              print("quit", type(e).__name__, e)
           PY
