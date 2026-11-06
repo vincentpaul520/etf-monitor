@@ -15,5 +15,8 @@
   "buy_emails_sent": 1,
   "buy_signal_date": "2026-07-03",
   "buy_signal_confirmed": false,
-  "notes": "最近检查: 2026-11-05, 价格: 3.348, 信号: 0/5"
+  "last_alert_signature": "",
+  "last_error_alert_date": "",
+  "alert_pending": true,
+  "notes": "告警发送失败: 2026-11-06 【盯盘告警】510880红利ETF 0/5有问题，买入提醒已中断"
 }
