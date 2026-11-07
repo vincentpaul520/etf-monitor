@@ -3,6 +3,7 @@
 
 import http.client
 import json
+import smtplib
 import tempfile
 import unittest
 from pathlib import Path
@@ -194,6 +195,57 @@ class MainFailureAlertTest(unittest.TestCase):
                 with self.assertRaises(SystemExit):
                     monitor.main()
             send.assert_not_called()
+
+
+class GithubActionsSmtpSecretTest(unittest.TestCase):
+    """QQ_EMAIL on the hosted runner is the address plus a trailing newline.
+
+    smtp.qq.com rejects that username and then drops the connection. smtplib
+    turns the dropped socket into "Connection unexpectedly closed", which is
+    the failure from run 42195296616. Stripping the secret lets AUTH succeed.
+    """
+
+    def test_trailing_newline_in_actions_secret_is_not_sent_to_qq(self):
+        captured = {}
+
+        class FakeSMTP_SSL:
+            def __init__(self, host, port, timeout=30):
+                captured["target"] = (host, port, timeout)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def login(self, user, password):
+                captured["user"] = user
+                captured["password"] = password
+                # Same failure QQ produced for the unstripped Actions secret.
+                if user != user.strip() or password != password.strip():
+                    raise smtplib.SMTPServerDisconnected("Connection unexpectedly closed")
+
+            def sendmail(self, from_addr, to_addrs, message):
+                captured["from"] = from_addr
+                captured["to"] = to_addrs
+                captured["message"] = message
+
+        raw_email = "user@qq.com\n"
+        raw_code = "abcdefghijklmnop"
+        self.assertEqual(raw_email[-1], "\n")
+        with mock.patch.object(monitor, "QQ_EMAIL", raw_email), \
+                mock.patch.object(monitor, "QQ_SMTP_CODE", raw_code), \
+                mock.patch.object(monitor.smtplib, "SMTP_SSL", FakeSMTP_SSL):
+            sent = monitor.send_email("【盯盘告警】测试", "正文")
+
+        self.assertTrue(sent)
+        self.assertEqual(captured["user"], "user@qq.com")
+        self.assertEqual(captured["password"], raw_code)
+        self.assertEqual(captured["from"], "user@qq.com")
+        self.assertEqual(captured["to"], "user@qq.com")
+        self.assertIn("From: user@qq.com\nTo: user@qq.com\n", captured["message"])
+        self.assertEqual(captured["target"][0], "smtp.qq.com")
+        self.assertEqual(captured["target"][1], 465)
 
 
 if __name__ == "__main__":
