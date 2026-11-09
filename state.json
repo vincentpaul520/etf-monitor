@@ -1,22 +1,22 @@
 {
   "phase": "monitoring",
-  "last_check_date": "2026-11-05",
-  "last_price": 3.348,
+  "last_check_date": "2026-11-09",
+  "last_price": 3.402,
   "signals": {
     "volume_shrink": false,
-    "macd_turning": false,
-    "price_stabilize": false,
+    "macd_turning": true,
+    "price_stabilize": true,
     "dividend_yield_high": false,
     "price_in_zone": false
   },
-  "signals_met_count": 0,
+  "signals_met_count": 2,
   "early_warning_sent": true,
   "early_warning_date": "2026-06-30",
-  "buy_emails_sent": 1,
-  "buy_signal_date": "2026-07-03",
+  "buy_emails_sent": 0,
+  "buy_signal_date": "",
   "buy_signal_confirmed": false,
-  "last_alert_signature": "",
+  "last_alert_signature": "volume_shrink:0,macd_turning:1,price_stabilize:1,dividend_yield_high:0,price_in_zone:0,stop:0",
   "last_error_alert_date": "",
-  "alert_pending": true,
-  "notes": "告警发送失败: 2026-11-06 【盯盘告警】510880红利ETF 0/5有问题，买入提醒已中断"
+  "alert_pending": false,
+  "notes": "最近检查: 2026-11-09, 价格: 3.402, 信号: 2/5"
 }
