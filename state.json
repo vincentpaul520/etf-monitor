@@ -1,22 +1,22 @@
 {
   "phase": "monitoring",
-  "last_check_date": "2026-11-11",
-  "last_price": 3.373,
+  "last_check_date": "2026-11-12",
+  "last_price": 3.357,
   "signals": {
     "volume_shrink": false,
     "macd_turning": false,
-    "price_stabilize": true,
+    "price_stabilize": false,
     "dividend_yield_high": false,
     "price_in_zone": false
   },
-  "signals_met_count": 1,
+  "signals_met_count": 0,
   "early_warning_sent": false,
   "early_warning_date": "",
   "buy_emails_sent": 0,
   "buy_signal_date": "",
   "buy_signal_confirmed": false,
-  "last_alert_signature": "volume_shrink:0,macd_turning:0,price_stabilize:1,dividend_yield_high:0,price_in_zone:0,stop:0",
+  "last_alert_signature": "volume_shrink:0,macd_turning:0,price_stabilize:0,dividend_yield_high:0,price_in_zone:0,stop:0",
   "last_error_alert_date": "",
   "alert_pending": false,
-  "notes": "最近检查: 2026-11-11, 价格: 3.373, 信号: 1/5"
+  "notes": "最近检查: 2026-11-12, 价格: 3.357, 信号: 0/5"
 }
