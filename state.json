@@ -1,7 +1,7 @@
 {
   "phase": "monitoring",
-  "last_check_date": "2026-11-12",
-  "last_price": 3.357,
+  "last_check_date": "2026-11-13",
+  "last_price": 3.374,
   "signals": {
     "volume_shrink": false,
     "macd_turning": false,
@@ -18,5 +18,5 @@
   "last_alert_signature": "volume_shrink:0,macd_turning:0,price_stabilize:0,dividend_yield_high:0,price_in_zone:0,stop:0",
   "last_error_alert_date": "",
   "alert_pending": false,
-  "notes": "最近检查: 2026-11-12, 价格: 3.357, 信号: 0/5"
+  "notes": "最近检查: 2026-11-13, 价格: 3.374, 信号: 0/5"
 }
